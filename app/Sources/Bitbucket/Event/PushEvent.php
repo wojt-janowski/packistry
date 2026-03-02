@@ -85,6 +85,6 @@ class PushEvent extends Input implements Deletable, Importable
 
     public function reference(): string
     {
-        return $this->shortRef();
+        return $this->latestReference()->target?->hash ?? $this->shortRef();
     }
 }

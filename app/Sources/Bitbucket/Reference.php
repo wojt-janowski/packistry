@@ -9,5 +9,6 @@ class Reference extends Input
     public function __construct(
         public string $name,
         public string $type,
+        public ?Target $target = null,
     ) {}
 }

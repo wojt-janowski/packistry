@@ -26,6 +26,7 @@ use App\Sources\Bitbucket\Link;
 use App\Sources\Bitbucket\Links;
 use App\Sources\Bitbucket\Push;
 use App\Sources\Bitbucket\Reference;
+use App\Sources\Bitbucket\Target;
 use App\Sources\Deletable;
 use App\Sources\Gitea\Event\DeleteEvent;
 use App\Sources\Gitea\Event\PushEvent;
@@ -439,6 +440,7 @@ function providerPushEvents(string $refType = 'tags', string $ref = '1.0.0'): ar
             'provider' => SourceProvider::GITEA,
             'event' => new PushEvent(
                 ref: "refs/$refType/$ref",
+                after: 'abc123',
                 repository: new GiteaRepository(
                     id: 1,
                     name: 'test',
@@ -453,6 +455,7 @@ function providerPushEvents(string $refType = 'tags', string $ref = '1.0.0'): ar
             'provider' => SourceProvider::GITHUB,
             'event' => new \App\Sources\GitHub\Event\PushEvent(
                 ref: "refs/$refType/$ref",
+                after: 'abc123',
                 repository: new \App\Sources\GitHub\Repository(
                     id: 1,
                     name: 'test',
@@ -489,6 +492,7 @@ function providerPushEvents(string $refType = 'tags', string $ref = '1.0.0'): ar
                             new: new Reference(
                                 name: $ref,
                                 type: $refType === 'heads' ? 'commit' : 'tag',
+                                target: new Target(hash: 'abc123'),
                             ),
                         ),
                     ]

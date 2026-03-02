@@ -13,6 +13,7 @@ class PushEvent extends Input implements Importable
 {
     public function __construct(
         public string $ref,
+        public string $after,
         public Repository $repository,
     ) {}
 
@@ -59,6 +60,6 @@ class PushEvent extends Input implements Importable
 
     public function reference(): string
     {
-        return $this->shortRef();
+        return $this->after;
     }
 }
