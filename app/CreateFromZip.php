@@ -36,17 +36,6 @@ class CreateFromZip
         $version ??= $decoded['version'] ?? throw new VersionNotFoundException('no version provided');
         $name = $decoded['name'] ?? throw new NameNotFoundException('no name provided');
 
-        $package->name = $name;
-
-        $package->description = $decoded['description'] ?? null;
-        $package->type = array_key_exists('type', $decoded) && $decoded['type'] !== '' && $decoded['type'] !== null
-            ? $decoded['type']
-            : PackageType::LIBRARY->value;
-
-        if ($package->isDirty()) {
-            $package->save();
-        }
-
         $createdVersion = $package
             ->versions()
             ->where('name', $versionName = Normalizer::version($version))
@@ -58,9 +47,11 @@ class CreateFromZip
             throw new RuntimeException('failed to calculate hash');
         }
 
+        $versionOrder = Normalizer::versionOrder($version);
+
         $createdVersion->package_id = $package->id;
         $createdVersion->name = $versionName;
-        $createdVersion->order = Normalizer::versionOrder($version);
+        $createdVersion->order = $versionOrder;
         $createdVersion->shasum = $hash;
         $createdVersion->archive_path = $package->repository->archivePath(Str::uuid7()->toString().'.zip');
         $createdVersion->metadata = collect($decoded)->only([
@@ -81,6 +72,23 @@ class CreateFromZip
         ])->toArray();
 
         $createdVersion->save();
+
+        $hasNewerVersion = $package->versions()
+            ->where('id', '!=', $createdVersion->id)
+            ->where('order', '>', $versionOrder)
+            ->exists();
+
+        if (! $hasNewerVersion) {
+            $package->name = $name;
+            $package->description = $decoded['description'] ?? null;
+            $package->type = array_key_exists('type', $decoded) && $decoded['type'] !== '' && $decoded['type'] !== null
+                ? $decoded['type']
+                : PackageType::LIBRARY->value;
+
+            if ($package->isDirty()) {
+                $package->save();
+            }
+        }
 
         /** @var string $contents */
         $contents = file_get_contents($path);
